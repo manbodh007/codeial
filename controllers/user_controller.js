@@ -1,7 +1,16 @@
 const Users = require('../models/user')
 
 module.exports.profile = function(req,res){
-    return res.end('this is profile page');
+   if(req.cookies.user_id){
+       Users.findById(req.cookies.user_id,function(error,user){
+           if(user){
+               return res.render('profile');
+           }else{
+               return res.redirect('/sign-in');
+           }
+       })
+   }else
+   return res.redirect('/users/sign-in');
 }
 module.exports.signIn = function(req,res){
     return res.render('sign_in',{
@@ -30,11 +39,33 @@ module.exports.create = function(req,res){
                     console.log("err");
                     return;
                 }
-                return res.redirect('/users/sign-in');
+                return res.redirect('/sign-in');
             })
+        }else{
+            return res.redirect('/sign-up');
+        }
+    })
+    
+}
+module.exports.createSession = function(req,res){
+    
+    //find user
+    Users.findOne({email:req.body.email},function(error,user){
+        if(error){
+            console.log('error in user found');
+            return;
+        }
+        //if user is found
+        if(user){
+         //check password is maching or not
+         if(user.password==req.body.password){
+             res.cookie('user_id',user.id);
+             return res.redirect('/users/profile');
+         }else{
+             return res.redirect('/users/sign-in');
+         }
         }else{
             return res.redirect('/users/sign-up');
         }
     })
-    
 }
